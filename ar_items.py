@@ -85,34 +85,60 @@ def item_hat(frame, face):
     x, y, w, h = face
     item = load_item("hat.png")
 
-    item_w = int(w * 1.2)                    # 얼굴보다 약간 넓게
-    item_h = int(item_w * 0.7)               # PNG의 가로세로 비율에 맞춰 조정
+    item_w = int(w * 1.7)                    # 얼굴보다 약간 넓게
+    item_h = int(item_w * 1.2)               # PNG의 가로세로 비율에 맞춰 조정
     item_x = x - (item_w - w) // 2           # 가로 중앙 정렬
-    item_y = y - int(item_h * 0.8)           # 이마 위쪽으로 올림
+    item_y = y - int(item_h * 0.4)           # 이마 위쪽으로 올림
 
     return overlay(frame, item, item_x, item_y, item_w, item_h)
 
 
 def item_glasses(frame, face):
     # TODO: 선글라스 배치
-    #   힌트) 눈은 대략 얼굴 박스 위에서 25~35% 지점에 있다.
-    #         item_y = y + int(h * 0.25) 부근부터 시작해서 눈으로 맞춰볼 것.
-    #   폭은 얼굴 폭(w)과 비슷하거나 살짝 크게.
-    return frame
+    x, y, w, h = face
+    item = load_item("glasses.png")
+
+    item_w = int(w * 1.1)
+    item_h = int(item_w * 0.25) 
+    item_x = x + (w - item_w) // 2
+    item_y = y + int(h * (0.27)) 
+
+    return overlay(frame, item, item_x, item_y, item_w, item_h)
 
 
 def item_mustache(frame, face):
-    # TODO: 수염/마스크 배치
-    #   힌트) 코 아래는 대략 얼굴 박스 위에서 60~65% 지점.
-    #         폭은 얼굴 폭의 절반 정도가 자연스럽다.
-    return frame
+    x, y, w, h = face
+    item = load_item("mustache.png")
+
+    item_w = int(w * 0.9)
+    item_h = int(item_w * 0.4)
+    item_x = x + (w - item_w) // 2
+    item_y = y + int(h * 0.62) 
+
+    return overlay(frame, item, item_x, item_y, item_w, item_h)
 
 
 def item_extra(frame, face):
-    # TODO(선택): 네 번째 아이템. 자유롭게.
-    #   아이디어) 얼굴 위에 이름표, 하트 이펙트, 강아지 귀+코 세트 등
-    #   여러 PNG를 한 함수에서 여러 번 overlay 해도 된다.
-    return frame
+    x, y, w, h = face
+    item = load_item("cathat.png")
+
+    item_w = int(w * 3) 
+    item_h = int(item_w * 1.2) 
+    item_x = (x + (w - item_w * 0.45)) // 2 
+    item_y = y + int(h * -1.3) 
+
+    return overlay(frame, item, item_x, item_y, item_w, item_h)
+
+def item_waddle_Dee(frame, face):
+    x, y, w, h = face
+    item = load_item("Waddle_Dee.png")
+
+    item_w = int(w * 2.2) 
+    item_h = int(item_w * 1.4) 
+    item_x = (x + (w - item_w * 0.35)) // 2 
+    item_y = y + int(h * -1.8) 
+
+    return overlay(frame, item, item_x, item_y, item_w, item_h)
 
 
 # ------------------------------------------------------------------ 레지스트리
@@ -122,6 +148,7 @@ AR_ITEMS = {
     2: ("GLASSES", item_glasses),
     3: ("MUSTACHE", item_mustache),
     4: ("EXTRA", item_extra),
+    4: ("Waddle_Dee", item_waddle_Dee),
 }
 
 
@@ -133,7 +160,11 @@ def apply_ar(frame, ar_id, faces):
 
     _, func = entry
     for face in faces:
-        frame = func(frame, face)
+        out = func(frame, face)
+        if out is None:                     # 아이템 함수가 frame을 반환하지 않은 경우
+            print(f"[AR] {func.__name__} 이(가) frame을 반환하지 않았습니다.")
+            continue
+        frame = out
     return frame
 
 
