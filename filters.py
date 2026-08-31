@@ -38,16 +38,18 @@ def f_gray(frame):
 
 def f_blur(frame):
     # TODO: Gaussian Blur 구현
-    #   힌트) cv2.GaussianBlur(frame, (커널크기, 커널크기), 시그마)
-    #   커널 크기는 반드시 홀수여야 한다. 짝수면 에러.
-    return frame
+    blur = cv2.GaussianBlur(frame, (15, 15), 0)
+    return to_bgr(blur)
 
 
 def f_sharpen(frame):
     # TODO: 샤프닝 구현
     #   힌트) 3x3 커널을 만들어 cv2.filter2D(frame, -1, kernel)
     #   중앙값이 크고 주변이 음수인 커널. 커널 합이 1이 되어야 밝기가 유지된다.
-    return frame
+    kernel = np.array([[ 0, -1,  0],
+                       [-1,  5, -1],
+                       [ 0, -1,  0]], dtype=np.float32)
+    return cv2.filter2D(frame, -1, kernel)
 
 
 def f_canny(frame):
