@@ -33,9 +33,9 @@ def build_transforms():
     train_tf = transforms.Compose([
         transforms.Resize((config.IMG_SIZE, config.IMG_SIZE)),
         # TODO: 증강을 더 추가해볼 것
-        #   RandomHorizontalFlip(), RandomRotation(10),
-        #   ColorJitter(brightness=0.3, contrast=0.3),
-        #   RandomAffine(degrees=0, translate=(0.05, 0.05))
+        transforms.RandomHorizontalFlip(), transforms.RandomRotation(10),
+        transforms.ColorJitter(brightness=0.3, contrast=0.3),
+        transforms.RandomAffine(degrees=0, translate=(0.05, 0.05)),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(config.IMAGENET_MEAN, config.IMAGENET_STD),
@@ -62,6 +62,9 @@ def build_model(num_classes):
     for param in model.parameters():
         param.requires_grad = False
 
+    for param in model.layer4.parameters():
+        param.requires_grad = True
+    
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     return model
 
