@@ -31,21 +31,21 @@ def f_original(frame):
 
 
 def f_gray(frame):
-    """구현 예시. 이 패턴을 그대로 따라 나머지를 채우면 된다."""
+    # 흑백
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     return to_bgr(gray)
 
 
 def f_blur(frame):
-    # TODO: Gaussian Blur 구현
+    # 가우시안 블러
     blur = cv2.GaussianBlur(frame, (15, 15), 0)
     return to_bgr(blur)
 
 
 def f_sharpen(frame):
-    # TODO: 샤프닝 구현
-    #   힌트) 3x3 커널을 만들어 cv2.filter2D(frame, -1, kernel)
-    #   중앙값이 크고 주변이 음수인 커널. 커널 합이 1이 되어야 밝기가 유지된다.
+    # 샤프닝
+    # 3x3 커널을 만들어 cv2.filter2D(frame, -1, kernel)
+    # 중앙값이 크고 주변이 음수인 커널. 커널 합이 1이 되어야 밝기가 유지된다.
     kernel = np.array([[ 0, -1,  0],
                        [-1,  5, -1],
                        [ 0, -1,  0]], dtype=np.float32)
@@ -53,36 +53,56 @@ def f_sharpen(frame):
 
 
 def f_canny(frame):
-    # TODO: 엣지 검출 구현
-    #   힌트) BGR -> GRAY -> cv2.Canny(gray, th1, th2)
-    #   결과가 2차원이므로 to_bgr()로 감싸서 반환할 것!
-    return frame
+    # 엣지 검출
+    # BGR -> GRAY -> cv2.Canny(gray, th1, th2)
+
+    gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    canny = cv2.Canny(gray,30,100)
+    #   결과가 2차원이므로 to_bgr()로 반환
+    return to_bgr(canny)
 
 
 def f_threshold(frame):
-    # TODO: 이진화 구현
-    #   힌트) cv2.threshold는 (retval, dst) 두 개를 반환한다. 두 번째만 쓴다.
+    # 이진화
+    # cv2.threshold는 (retval, dst) 두 개를 반환
+    gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    threshold, dst = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY) 
     #   조명이 고르지 않으면 cv2.adaptiveThreshold가 훨씬 결과가 좋다.
-    return frame
+    return dst
 
 
 def f_hist_eq(frame):
-    # TODO: 히스토그램 평활화 구현
-    #   주의) 컬러 이미지에 그냥 못 쓴다. BGR 각 채널에 따로 걸면 색이 망가진다.
-    #   힌트) BGR -> YCrCb 변환 후 Y(밝기) 채널에만 equalizeHist를 적용하고
-    #         다시 BGR로 되돌린다.
-    return frame
+    # 히스토그램 평활화
+    # 컬러 이미지에 그냥 못 쓴다. BGR 각 채널에 따로 걸면 색이 망가진다.
+    ycrcb = cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)
+    ycrcb[:,:,0] = cv2.equalizeHist(ycrcb[:,:,0])
+    # BGR -> YCrCb 변환 후 Y(밝기) 채널에만 equalizeHist를 적용하고 다시 BGR로 되돌린다.
+    
+    return cv2.cvtColor(ycrcb,cv2.COLOR_YCrCb2BGR)
 
 
-def f_cartoon(frame):
-    # TODO(선택): 직접 구성한 효과. 가산점 노리는 자리.
-    #   예) bilateralFilter로 색을 뭉갠 뒤 adaptiveThreshold 윤곽선을 곱하기
-    #   예) 세피아 톤 (3x3 색 변환 행렬 + cv2.transform)
-    return frame
+def f_sepia(frame):
+    """세피아 톤. 3x3 색 변환 행렬을 픽셀마다 곱한다.
+ 
+    표준 세피아 공식(RGB 기준)을 OpenCV의 BGR 채널 순서에 맞게
+    행과 열을 뒤집어 넣었다.
+      R' = 0.393R + 0.769G + 0.189B
+      G' = 0.349R + 0.686G + 0.168B
+      B' = 0.272R + 0.534G + 0.131B
+    """
+    kernel = np.array([[0.272, 0.534, 0.131],   # B
+                        [0.349, 0.686, 0.168],   # G
+                        [0.393, 0.769, 0.189]])  # R
+ 
+    sepia = cv2.transform(frame, kernel)
+    # cv2.transform은 255를 넘는 값을 자동으로 clip하지 않고 wraparound시킨다.
+    # (예: 260 -> 4) clip을 빼면 밝은 영역에 검은 반점이 생기는 버그가 난다.
+    sepia = np.clip(sepia, 0, 255).astype(np.uint8)
+    return sepia
 
 
 # ------------------------------------------------------------------ 레지스트리
-# 숫자키와 필터를 연결한다. 새 필터를 추가하려면 여기 한 줄만 추가하면 된다.
+# 숫자키와 필터 연결
 FILTERS = {
     0: ("ORIGINAL", f_original),
     1: ("GRAY", f_gray),
@@ -91,7 +111,7 @@ FILTERS = {
     4: ("CANNY", f_canny),
     5: ("THRESHOLD", f_threshold),
     6: ("HIST_EQ", f_hist_eq),
-    7: ("CARTOON", f_cartoon),
+    7: ("SEPIA", f_sepia),
 }
 
 
