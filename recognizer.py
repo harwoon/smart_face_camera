@@ -18,7 +18,7 @@ from torchvision import transforms
 
 import config
 from train import build_model
-from utils import crop_face
+from utils import crop_face, get_device
 
 
 class Recognizer:
@@ -26,8 +26,7 @@ class Recognizer:
 
     def __init__(self, model_path=None, device=None):
         self.model_path = model_path or config.MODEL_PATH
-        self.device = device or torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device or get_device(verbose=False)
 
         self.model = None
         self.classes = []
@@ -51,7 +50,7 @@ class Recognizer:
         ckpt = torch.load(self.model_path, map_location=self.device)
         self.classes = ckpt["classes"]          # 학습 때 저장된 순서 그대로 사용
 
-        self.model = build_model(len(self.classes))
+        self.model = build_model(len(self.classes), backbone=ckpt.get("arch", "resnet18"))
         self.model.load_state_dict(ckpt["state_dict"])
         self.model.to(self.device)
         self.model.eval()                       # 필수. BatchNorm/Dropout 동작이 달라진다.

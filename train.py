@@ -26,6 +26,18 @@ import config
 from utils import get_device
 
 
+# ------------------------------------------------------------------
+
+# 백본 선택
+# BACKBONE = "resnet18"
+BACKBONE = "mobilenet_v2"
+
+UNFREEZE_LAST_BLOCK = False   # True로 바꾸면 마지막 블록까지 fine-tuning
+
+# eval_confusion.py에서 결과 파일 이름에 쓸 태그
+EXPERIMENT_TAG = f"{BACKBONE}" + ("_unfrozen" if UNFREEZE_LAST_BLOCK else "_base")
+
+
 # ------------------------------------------------------------------ transform
 def build_transforms():
     """학습용/검증용 transform을 만든다.
@@ -36,9 +48,9 @@ def build_transforms():
     train_tf = transforms.Compose([
         transforms.Resize((config.IMG_SIZE, config.IMG_SIZE)),
         # TODO: 증강을 더 추가해볼 것
-        #   RandomHorizontalFlip(), RandomRotation(10),
-        #   ColorJitter(brightness=0.3, contrast=0.3),
-        #   RandomAffine(degrees=0, translate=(0.05, 0.05))
+        transforms.RandomHorizontalFlip(), transforms.RandomRotation(10),
+        transforms.ColorJitter(brightness=0.3, contrast=0.3),
+        transforms.RandomAffine(degrees=0, translate=(0.05, 0.05)),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(config.IMAGENET_MEAN, config.IMAGENET_STD),
@@ -53,19 +65,42 @@ def build_transforms():
 
 
 # ------------------------------------------------------------------ model
-def build_model(num_classes):
-    """사전학습 ResNet18의 마지막 fc만 교체해 전이학습.
+def build_model(num_classes, backbone=None):
+    """사전학습 백본의 분류기만 교체해 전이학습.
 
-    TODO: 다른 백본도 실험해볼 것 (mobilenet_v2가 더 가벼워 실시간에 유리)
-    TODO: 정확도가 아쉬우면 layer4까지 requires_grad=True로 풀어
-          작은 learning rate로 fine-tuning 해볼 것
+    train.py에서는 backbone을 안 넘기면 위쪽 BACKBONE 상수를 그대로 쓴다.
+    eval_confusion.py / recognizer.py는 체크포인트에 저장된 arch 값을
+    명시적으로 넘겨서, train.py의 현재 BACKBONE 설정과 무관하게
+    항상 올바른 구조로 모델을 재생성한다.
+
+    ResNet18과 MobileNetV2는 구조 이름이 다르므로
+    ("layer4"/"fc" vs "features[-1]"/"classifier") 서로 다른 코드가 필요하다.
     """
-    model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+    backbone = backbone or BACKBONE
 
-    for param in model.parameters():
-        param.requires_grad = False
+    if backbone == "resnet18":
+        model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+        for param in model.parameters():
+            param.requires_grad = False
+        if UNFREEZE_LAST_BLOCK:
+            for param in model.layer4.parameters():
+                param.requires_grad = True
+        model.fc = nn.Linear(model.fc.in_features, num_classes)
 
-    model.fc = nn.Linear(model.fc.in_features, num_classes)
+    elif backbone == "mobilenet_v2":
+        model = models.mobilenet_v2(weights=models.MobileNet_V2_Weights.DEFAULT)
+        for param in model.parameters():
+            param.requires_grad = False
+        if UNFREEZE_LAST_BLOCK:
+            # MobileNetV2에는 layer4가 없다. features의 마지막 블록이
+            # ResNet의 layer4와 같은 역할(가장 태스크 특화된 마지막 conv 단)을 한다.
+            for param in model.features[-1].parameters():
+                param.requires_grad = True
+        model.classifier[1] = nn.Linear(model.last_channel, num_classes)
+
+    else:
+        raise ValueError(f"지원하지 않는 backbone: {backbone}")
+
     return model
 
 
@@ -106,6 +141,9 @@ def run_epoch(model, loader, criterion, optimizer, device, train=True, scaler=No
 
 
 def main():
+    print(f"실험 설정: backbone={BACKBONE}, unfreeze_last_block={UNFREEZE_LAST_BLOCK}")
+    print(f"태그: {EXPERIMENT_TAG}")
+
     device = get_device()
     use_cuda = device.type == "cuda"
 
@@ -170,7 +208,7 @@ def main():
             torch.save({
                 "state_dict": model.state_dict(),
                 "classes": classes,
-                "arch": "resnet18",
+                "arch": BACKBONE,
                 "img_size": config.IMG_SIZE,
                 "face_margin": config.FACE_MARGIN,
             }, config.MODEL_PATH)
@@ -181,9 +219,9 @@ def main():
     print("      데이터를 랜덤 split하면 train/val에 거의 같은 사진이 들어간다.")
     print("      진짜 검증은 다른 시간/다른 장소에서 새로 찍어서 해볼 것.")
     print()
-    print("여러 실험(baseline/데이터추가/layer4/증강)을 비교할 계획이면")
+    print("여러 실험(backbone/데이터추가/layer4/증강)을 비교할 계획이면")
     print("다음 실험을 돌리기 전에 반드시 이 파일을 다른 이름으로 복사해둘 것.")
-    print(f"  cp {config.MODEL_PATH} results/<실험이름>.pth")
+    print(f"  cp {config.MODEL_PATH} results/{EXPERIMENT_TAG}.pth")
     print("안 하면 다음 python train.py 실행 시 덮어써져서 되돌릴 수 없다.")
 
 

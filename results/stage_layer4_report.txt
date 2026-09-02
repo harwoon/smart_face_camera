@@ -1,0 +1,13 @@
+accuracy: 0.9975
+
+              precision    recall  f1-score   support
+
+ giljunyoung       0.99      1.00      0.99        77
+     haewoon       1.00      0.99      0.99        92
+    hyeonkyu       1.00      1.00      1.00        79
+       minee       1.00      1.00      1.00        83
+     seungah       1.00      1.00      1.00        69
+
+    accuracy                           1.00       400
+   macro avg       1.00      1.00      1.00       400
+weighted avg       1.00      1.00      1.00       400

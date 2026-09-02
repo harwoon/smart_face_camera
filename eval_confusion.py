@@ -96,7 +96,7 @@ def main():
         )
     classes = ckpt_classes
 
-    model = build_model(len(classes))
+    model = build_model(len(classes), backbone=ckpt.get("arch", "resnet18"))
     model.load_state_dict(ckpt["state_dict"])
     model.to(device).eval()
 
