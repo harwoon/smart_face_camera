@@ -8,8 +8,15 @@
 """
 import cv2
 import numpy as np
+import torch
 
 import config
+
+
+# ------------------------------------------------------------------ 디바이스
+def get_device():
+    """cuda를 쓸 수 있으면 cuda, 아니면 cpu."""
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # ------------------------------------------------------------------ 박스 처리

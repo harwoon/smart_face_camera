@@ -48,6 +48,7 @@ BATCH_SIZE = 32
 EPOCHS = 10
 LEARNING_RATE = 1e-3
 VAL_RATIO = 0.2
+NUM_WORKERS = 4
 
 # ---------------------------------------------------------------- 키 바인딩
 KEY_QUIT = ord('q')

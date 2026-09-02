@@ -15,12 +15,15 @@ CNN 전이학습 (요구사항 5).
 3. Normalize는 ImageNet 값을 그대로 쓸 것.
    사전학습 가중치가 그 분포에 맞춰져 있다.
 """
+import time
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 from torchvision import datasets, models, transforms
 
 import config
+from utils import get_device
 
 
 # ------------------------------------------------------------------ transform
@@ -33,9 +36,9 @@ def build_transforms():
     train_tf = transforms.Compose([
         transforms.Resize((config.IMG_SIZE, config.IMG_SIZE)),
         # TODO: 증강을 더 추가해볼 것
-        transforms.RandomHorizontalFlip(), transforms.RandomRotation(10),
-        transforms.ColorJitter(brightness=0.3, contrast=0.3),
-        transforms.RandomAffine(degrees=0, translate=(0.05, 0.05)),
+        #   RandomHorizontalFlip(), RandomRotation(10),
+        #   ColorJitter(brightness=0.3, contrast=0.3),
+        #   RandomAffine(degrees=0, translate=(0.05, 0.05))
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(config.IMAGENET_MEAN, config.IMAGENET_STD),
@@ -62,31 +65,38 @@ def build_model(num_classes):
     for param in model.parameters():
         param.requires_grad = False
 
-    for param in model.layer4.parameters():
-        param.requires_grad = True
-    
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     return model
 
 
 # ------------------------------------------------------------------ train loop
-def run_epoch(model, loader, criterion, optimizer, device, train=True):
+def run_epoch(model, loader, criterion, optimizer, device, train=True, scaler=None):
     model.train() if train else model.eval()
 
+    use_amp = scaler is not None and device.type == "cuda"
     total_loss, correct, total = 0.0, 0, 0
     context = torch.enable_grad() if train else torch.no_grad()
 
     with context:
         for images, labels in loader:
-            images, labels = images.to(device), labels.to(device)
+            images = images.to(device, non_blocking=True)
+            labels = labels.to(device, non_blocking=True)
 
-            outputs = model(images)
-            loss = criterion(outputs, labels)
+            # AMP(자동 혼합 정밀도): float32 대신 float16으로 계산해
+            # GPU 학습을 크게 앞당긴다. CPU에서는 효과가 없어 끈다.
+            with torch.autocast(device_type=device.type, enabled=use_amp):
+                outputs = model(images)
+                loss = criterion(outputs, labels)
 
             if train:
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+                optimizer.zero_grad(set_to_none=True)
+                if use_amp:
+                    scaler.scale(loss).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    loss.backward()
+                    optimizer.step()
 
             total_loss += loss.item() * images.size(0)
             correct += (outputs.argmax(1) == labels).sum().item()
@@ -96,8 +106,8 @@ def run_epoch(model, loader, criterion, optimizer, device, train=True):
 
 
 def main():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"device: {device}")
+    device = get_device()
+    use_cuda = device.type == "cuda"
 
     train_tf, val_tf = build_transforms()
 
@@ -120,10 +130,18 @@ def main():
     train_set = torch.utils.data.Subset(full_train, list(train_idx))
     val_set = torch.utils.data.Subset(full_val, list(val_idx))
 
-    train_loader = DataLoader(train_set, batch_size=config.BATCH_SIZE,
-                              shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_set, batch_size=config.BATCH_SIZE,
-                            shuffle=False, num_workers=0)
+    # GPU를 쓸 때만 의미 있는 옵션들.
+    #   num_workers : 이미지 로딩/증강을 별도 프로세스에서 병렬로. GPU가 굶지 않게 한다.
+    #   pin_memory  : CPU->GPU 전송을 빠르게.
+    # Windows에서 num_workers > 0이면 반드시 if __name__ == "__main__" 안에서
+    # 실행해야 한다. (이 파일은 그렇게 되어 있다)
+    loader_kwargs = dict(
+        batch_size=config.BATCH_SIZE,
+        num_workers=config.NUM_WORKERS if use_cuda else 0,
+        pin_memory=use_cuda,
+    )
+    train_loader = DataLoader(train_set, shuffle=True, **loader_kwargs)
+    val_loader = DataLoader(val_set, shuffle=False, **loader_kwargs)
 
     model = build_model(len(classes)).to(device)
     criterion = nn.CrossEntropyLoss()
@@ -131,15 +149,20 @@ def main():
         filter(lambda p: p.requires_grad, model.parameters()),
         lr=config.LEARNING_RATE)
 
+    scaler = torch.amp.GradScaler("cuda") if use_cuda else None
+
     best_acc = 0.0
+    t_start = time.time()
     for epoch in range(1, config.EPOCHS + 1):
+        t0 = time.time()
         tr_loss, tr_acc = run_epoch(model, train_loader, criterion,
-                                    optimizer, device, train=True)
+                                    optimizer, device, True, scaler)
         va_loss, va_acc = run_epoch(model, val_loader, criterion,
-                                    optimizer, device, train=False)
+                                    optimizer, device, False, scaler)
         print(f"[{epoch:02d}/{config.EPOCHS}] "
               f"train loss {tr_loss:.4f} acc {tr_acc:.4f} | "
-              f"val loss {va_loss:.4f} acc {va_acc:.4f}")
+              f"val loss {va_loss:.4f} acc {va_acc:.4f} | "
+              f"{time.time() - t0:.1f}s")
 
         if va_acc >= best_acc:
             best_acc = va_acc
@@ -152,10 +175,16 @@ def main():
                 "face_margin": config.FACE_MARGIN,
             }, config.MODEL_PATH)
 
-    print(f"\n저장 완료: {config.MODEL_PATH} (best val acc {best_acc:.4f})")
+    print(f"\n저장 완료: {config.MODEL_PATH} "
+          f"(best val acc {best_acc:.4f}, 총 {time.time() - t_start:.1f}s)")
     print("주의: val acc가 99%여도 좋아하지 말 것. 같은 자리에서 연속 촬영한")
     print("      데이터를 랜덤 split하면 train/val에 거의 같은 사진이 들어간다.")
     print("      진짜 검증은 다른 시간/다른 장소에서 새로 찍어서 해볼 것.")
+    print()
+    print("여러 실험(baseline/데이터추가/layer4/증강)을 비교할 계획이면")
+    print("다음 실험을 돌리기 전에 반드시 이 파일을 다른 이름으로 복사해둘 것.")
+    print(f"  cp {config.MODEL_PATH} results/<실험이름>.pth")
+    print("안 하면 다음 python train.py 실행 시 덮어써져서 되돌릴 수 없다.")
 
 
 if __name__ == "__main__":
