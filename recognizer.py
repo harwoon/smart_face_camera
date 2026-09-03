@@ -26,7 +26,7 @@ class Recognizer:
 
     def __init__(self, model_path=None, device=None):
         self.model_path = model_path or config.MODEL_PATH
-        self.device = device or get_device(verbose=False)
+        self.device = device or get_device()
 
         self.model = None
         self.classes = []
