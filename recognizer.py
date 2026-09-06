@@ -95,7 +95,11 @@ class Recognizer:
                 self.history.append(result[0])
                 # 최근 N회의 최빈값을 쓰면 라벨 깜빡임이 사라진다.
                 label = Counter(self.history).most_common(1)[0][0]
-                self.last_result = (label, result[1])
+
+                if result[1] < config.CONF_THRESHOLD:
+                    self.last_result = ("UNKNOWN", result[1])
+                else:
+                    self.last_result = (label, result[1])
 
         return self.last_result
 
