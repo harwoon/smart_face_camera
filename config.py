@@ -55,5 +55,5 @@ KEY_RELOAD = ord('l')       # 모델 다시 로드
 KEY_HELP = ord('h')
 
 # 필터: 숫자키 0~9  /  AR 아이템: a s d f ... 는 f가 겹치므로 z x c 사용
-AR_KEYS = {ord('z'): 1, ord('x'): 2, ord('c'): 3, ord('v'): 4}
+AR_KEYS = {ord('z'): 1, ord('x'): 2, ord('c'): 3, ord('v'): 4, ord('g'): 5}
 AR_KEY_OFF = ord('`')

@@ -136,7 +136,7 @@ AR_ITEMS = {
     2: ("GLASSES", item_glasses),
     3: ("MUSTACHE", item_mustache),
     4: ("EXTRA", item_extra),
-    4: ("Waddle_Dee", item_waddle_Dee),
+    5: ("Waddle_Dee", item_waddle_Dee),
 }
 
 

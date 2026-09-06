@@ -37,7 +37,7 @@ def build_transforms():
     train_tf = transforms.Compose([
         transforms.Resize((config.IMG_SIZE, config.IMG_SIZE)),
         # TODO: 증강을 더 추가해볼 것
-        transforms.RandomHorizontalFlip(), transforms.RandomRotation(10),
+        transforms.RandomRotation(10),
         transforms.ColorJitter(brightness=0.3, contrast=0.3),
         transforms.RandomAffine(degrees=0, translate=(0.05, 0.05)),
         transforms.RandomHorizontalFlip(),
