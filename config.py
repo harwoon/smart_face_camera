@@ -1,9 +1,5 @@
 """
-프로젝트 전역 설정.
-
-여기 있는 값은 팀원 전체가 공유한다.
-특히 FACE_MARGIN / IMG_SIZE / IMAGENET_* 는 학습과 추론이 반드시
-같은 값을 써야 한다. 한쪽만 바꾸면 에러 없이 정확도만 무너진다.
+프로젝트 전역 설정
 """
 from pathlib import Path
 

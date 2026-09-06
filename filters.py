@@ -1,18 +1,5 @@
 """
-영상 필터 (요구사항 2).
-
-[ 규칙 ]
-모든 필터 함수의 시그니처는 반드시 다음과 같다.
-
-    def f_xxx(frame: np.ndarray) -> np.ndarray
-
-입력도 출력도 3채널 BGR (H, W, 3) 이어야 한다.
-
-**가장 흔한 버그**
-grayscale / Canny / threshold 결과는 2차원 (H, W)이다.
-그대로 반환하면 AR 합성 단계에서 broadcast 에러가 난다.
-반드시 cv2.cvtColor(x, cv2.COLOR_GRAY2BGR)로 3채널로 되돌려서 반환할 것.
-아래 to_bgr() 헬퍼를 쓰면 된다.
+영상 필터
 """
 import cv2
 import numpy as np

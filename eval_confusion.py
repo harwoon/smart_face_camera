@@ -1,25 +1,8 @@
 """
-저장된 모델을 평가해 confusion matrix와 리포트를 만든다.
+저장된 모델을 평가해 confusion matrix와 리포트 생성
 
 실행:  python eval_confusion.py face_model.pth
        python eval_confusion.py results/stage1_base.pth --tag stage1_base
-
-[ 왜 train.py에 안 넣고 따로 뺐나 ]
-학습 중 val accuracy는 매 epoch 계산해야 하지만, confusion matrix는
-'최종적으로 잘 나온 모델 하나'에 대해 한 번만 뽑으면 된다.
-학습 루프에 넣으면 매 epoch마다 계산하는 낭비가 생긴다.
-
-[ 4단계 비교 시 주의할 점 ]
-train.py의 random_split은 시드 42로 고정되어 있지만, 데이터를
-200장->400장으로 늘리면 전체 인덱스 개수가 달라져서 val set의
-실제 이미지 구성도 달라진다. 즉 1단계와 2단계의 val accuracy는
-완전히 같은 시험지로 비교한 게 아니다.
-
-발표에서 엄밀한 비교를 하려면:
-  1) 이 스크립트가 만드는 val 기반 결과는 "학습 중 진행 상황 확인용"으로 쓰고
-  2) 4단계 전부 공통으로 쓸 별도의 '고정 테스트셋'(다른 날 찍은 사진)을
-     따로 만들어서 --test-dir 옵션으로 넣어 비교하는 것을 권장한다.
-     (config.DATASET_DIR와 다른 폴더에 미리 준비)
 """
 import argparse
 from pathlib import Path
@@ -36,12 +19,6 @@ from train import build_model
 
 
 def build_val_loader(test_dir=None):
-    """test_dir가 주어지면 그 폴더 전체를 평가셋으로 쓴다.
-    (여러 단계를 공정하게 비교하려면 이 방식을 권장)
-
-    주어지지 않으면 train.py와 동일한 방식(같은 시드)으로
-    학습에 쓰인 dataset에서 val 부분만 재구성한다.
-    """
     val_tf = transforms.Compose([
         transforms.Resize((config.IMG_SIZE, config.IMG_SIZE)),
         transforms.ToTensor(),

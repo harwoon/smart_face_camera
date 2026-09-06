@@ -1,13 +1,8 @@
 """
-얼굴 데이터 수집 (요구사항 4).
-
-이 단계의 데이터 품질이 5, 6번의 성패를 그대로 결정한다.
-모델을 튜닝하는 것보다 여기서 좋은 데이터를 모으는 게 훨씬 중요하다.
+얼굴 데이터 수집
 """
 import time
-
 import cv2
-
 import config
 from utils import crop_face, draw_text, imwrite_unicode, largest_face
 
@@ -108,10 +103,3 @@ class FaceCollector:
         tip = tips[int(self.count / max(1, self.target / len(tips))) % len(tips)]
         draw_text(frame, tip, (20, 90), (255, 255, 255), scale=0.55)
         return frame
-
-
-# TODO(선택): 수집 품질을 더 올리고 싶다면
-#   1) 블러 판정 - cv2.Laplacian(gray, cv2.CV_64F).var() 값이 낮으면
-#      흔들린 사진이므로 저장하지 않고 건너뛴다.
-#   2) 조명 다양화 - 창가/실내등 등 조명을 바꿔가며 두세 번 나눠 수집한다.
-#   3) 배경 다양화 - 같은 자리에서만 찍으면 모델이 배경을 외워버린다.

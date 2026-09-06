@@ -1,18 +1,8 @@
 """
-AR 아이템 합성 (요구사항 3).
-
-[ 규칙 ]
-모든 아이템 함수의 시그니처는 다음과 같다.
+AR 아이템 합성
 
     def item_xxx(frame, face) -> frame
     # face = (x, y, w, h)  얼굴 박스 하나
-
-overlay()는 이미 완성되어 있으므로, 각 아이템 함수에서는
-"얼굴 박스 기준으로 어디에 얼마 크기로 놓을지" 좌표만 계산하면 된다.
-
-[ PNG 준비 ]
-assets/ 폴더에 배경이 투명한 PNG를 넣을 것.
-반드시 알파 채널(4채널)이 있어야 한다. 없으면 검은 사각형이 붙는다.
 """
 import cv2
 import numpy as np
@@ -43,10 +33,8 @@ def load_item(filename):
 
 
 def overlay(frame, item, x, y, w, h):
-    """알파 블렌딩으로 item을 frame 위에 합성. (완성본 - 수정 불필요)
-
-    화면 밖으로 나가는 부분은 자동으로 잘라내므로 얼굴이 가장자리로 가도
-    프로그램이 죽지 않는다.
+    """
+    알파 블렌딩으로 item을 frame 위에 합성
     """
     if item is None or w <= 0 or h <= 0:
         return frame

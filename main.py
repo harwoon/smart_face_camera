@@ -47,8 +47,6 @@ class SmartCamera:
     # -------------------------------------------------------------- 웹캠
     def open_camera(self):
         self.cap = cv2.VideoCapture(config.CAM_INDEX)
-        # Windows에서 열리는 데 오래 걸리면 아래처럼 백엔드를 지정해볼 것
-        # self.cap = cv2.VideoCapture(config.CAM_INDEX, cv2.CAP_DSHOW)
 
         if not self.cap.isOpened():
             raise RuntimeError(f"웹캠을 열 수 없습니다 (index={config.CAM_INDEX})")
@@ -65,8 +63,8 @@ class SmartCamera:
 
     # -------------------------------------------------------------- 모드
     def enter_register(self):
-        # cv2 창에서는 텍스트 입력이 안 되므로 터미널로 받는다.
-        # 이 동안 영상은 멈추지만 과제 요구사항에는 문제없다.
+        # 터미널로 모드 입력 받기
+
         name = input("등록할 이름을 입력하세요 (영문 권장): ")
         if self.collector.start(name):
             self.mode = MODE_REGISTER
@@ -142,8 +140,7 @@ class SmartCamera:
                 if config.MIRROR:
                     frame = cv2.flip(frame, 1)
 
-                # 원본은 따로 보관한다.
-                # 데이터 저장과 추론은 반드시 필터/AR이 안 걸린 원본으로 해야 한다.
+                # 원본은 따로 보관
                 raw = frame.copy()
 
                 faces = self.detector.detect(raw)

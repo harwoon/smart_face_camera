@@ -1,7 +1,6 @@
 """
 공용 유틸리티.
 
-여기 있는 함수는 "직접 짜면 반드시 버그가 나는 것들"만 모아뒀다.
 - clamp_box  : 얼굴이 화면 밖으로 나갈 때 프로그램이 죽는 문제 방지
 - crop_face  : 학습/추론이 완전히 동일한 방식으로 얼굴을 자르도록 통일
 - imread/imwrite_unicode : Windows 한글 경로 문제 우회
@@ -44,10 +43,8 @@ def expand_box(x, y, w, h, margin, frame_w, frame_h):
 
 # ------------------------------------------------------------------ 얼굴 크롭
 def crop_face(frame, face, margin=None, size=None):
-    """얼굴 영역을 잘라 정사각형으로 리사이즈해 반환.
-
-    데이터 수집(collector.py)과 실시간 추론(recognizer.py)이
-    반드시 이 함수 하나만 사용해야 한다. 각자 따로 짜면 어긋난다.
+    """
+    얼굴 영역을 잘라 정사각형으로 리사이즈해 반환
     """
     margin = config.FACE_MARGIN if margin is None else margin
     size = config.IMG_SIZE if size is None else size
@@ -93,11 +90,7 @@ def imwrite_unicode(path, img):
 
 # ------------------------------------------------------------------ 화면 표시
 def draw_text(frame, text, org, color=(255, 255, 255), scale=0.6, thickness=2):
-    """외곽선을 넣어 배경과 상관없이 읽히는 텍스트.
-
-    주의: cv2.putText는 한글을 못 그린다. 영어만 사용할 것.
-    (한글이 꼭 필요하면 PIL ImageDraw + 폰트를 써야 한다)
-    """
+    # cv2.putText는 한글 불가. 영어만 사용
     cv2.putText(frame, text, org, cv2.FONT_HERSHEY_SIMPLEX, scale,
                 (0, 0, 0), thickness + 2, cv2.LINE_AA)
     cv2.putText(frame, text, org, cv2.FONT_HERSHEY_SIMPLEX, scale,

@@ -1,11 +1,5 @@
 """
-실시간 얼굴 분류 (요구사항 6).
-
-[ 가장 많이 터지는 버그: BGR / RGB ]
-OpenCV는 BGR로 읽는다. 반면 ImageFolder + PIL로 학습했다면 모델은 RGB를
-기대한다. 그대로 넣으면 채널이 뒤집힌 이미지를 넣는 셈인데,
-에러는 안 나고 정확도만 이상하게 떨어져서 원인 찾기가 정말 어렵다.
-반드시 cv2.cvtColor(..., cv2.COLOR_BGR2RGB)를 거칠 것.
+실시간 얼굴 분류
 """
 from collections import Counter, deque
 
@@ -82,7 +76,8 @@ class Recognizer:
         return self.classes[idx], float(probs[idx])
 
     def update(self, frame, faces):
-        """매 프레임 호출. INFER_INTERVAL마다 한 번만 실제 추론한다.
+        """
+        매 프레임 호출. INFER_INTERVAL마다 한 번만 실제 추론한다.
 
         매 프레임 추론하면 눈에 띄게 렉이 걸린다.
         """

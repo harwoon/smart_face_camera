@@ -1,19 +1,8 @@
 """
-CNN 전이학습 (요구사항 5).
+CNN 전이학습
 
-단독 실행:  python train.py
+실행:  python train.py
 
-[ 절대 놓치면 안 되는 것 ]
-1. dataset.classes를 모델과 함께 저장할 것.
-   ImageFolder는 폴더명을 알파벳순으로 정렬해 인덱스를 매긴다.
-   추론 쪽에서 os.listdir() 순서로 리스트를 다시 만들면 순서가 어긋나
-   "이름만 서로 바뀐 채 잘 돌아가는" 최악의 버그가 난다.
-
-2. train / val transform을 분리할 것.
-   검증 데이터에 랜덤 증강이 들어가면 성능 측정이 무의미해진다.
-
-3. Normalize는 ImageNet 값을 그대로 쓸 것.
-   사전학습 가중치가 그 분포에 맞춰져 있다.
 """
 import time
 
