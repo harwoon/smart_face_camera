@@ -4,6 +4,7 @@ dataset
 # 학습된 모델
 *.pth
 *.pt
+arcface_gallery.npz
 
 # Python
 __pycache__/

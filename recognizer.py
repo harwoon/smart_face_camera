@@ -92,14 +92,16 @@ class Recognizer:
             from utils import largest_face
             result = self.predict(frame, largest_face(faces))
             if result:
-                self.history.append(result[0])
-                # 최근 N회의 최빈값을 쓰면 라벨 깜빡임이 사라진다.
-                label = Counter(self.history).most_common(1)[0][0]
+                label, conf = result
+                if conf < config.CONF_THRESHOLD:
+                    label = "UNKNOWN"
 
-                if result[1] < config.CONF_THRESHOLD:
-                    self.last_result = ("UNKNOWN", result[1])
-                else:
-                    self.last_result = (label, result[1])
+                # UNKNOWN 판정까지 포함해서 다수결을 내야 라벨/신뢰도가 항상 같은
+                # 프레임 것으로 일치하고, 한 프레임만 튀어도 묻히지 않는다.
+                self.history.append((label, conf))
+                voted_label = Counter(l for l, _ in self.history).most_common(1)[0][0]
+                voted_conf = next(c for l, c in reversed(self.history) if l == voted_label)
+                self.last_result = (voted_label, voted_conf)
 
         return self.last_result
 

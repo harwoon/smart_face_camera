@@ -37,7 +37,16 @@ COLLECT_INTERVAL = 5     # N프레임마다 1장 저장 (연속 중복 방지)
 # ---------------------------------------------------------------- 실시간 추론
 INFER_INTERVAL = 5       # N프레임마다 1회만 추론 (매 프레임 하면 렉)
 VOTE_WINDOW = 5          # 최근 N회 예측의 최빈값 사용 (라벨 깜빡임 방지)
-CONF_THRESHOLD = 0.6     # 과제상 미등록자 판별은 불필요하므로 기본 0
+CONF_THRESHOLD = 0.8     # 과제상 미등록자 판별은 불필요하므로 기본 0
+
+# ---------------------------------------------------------------- ArcFace (실험적, 언제든 제거 가능)
+# True면 main.py가 CNN 분류기(recognizer.py) 대신 arcface_recognizer.py를 사용한다.
+# 지우려면: 이 값 False로 되돌리고 arcface_recognizer.py / enroll_arcface.py 삭제,
+# requirements.txt에서 insightface/onnxruntime 두 줄만 빼면 원상복구.
+USE_ARCFACE = True
+ARCFACE_MODEL_NAME = "buffalo_l"           # insightface 모델 팩. 첫 실행 시 자동 다운로드(~300MB)
+ARCFACE_GALLERY_PATH = BASE_DIR / "arcface_gallery.npz"   # enroll_arcface.py가 생성
+ARCFACE_SIM_THRESHOLD = 0.38               # 코사인 유사도. 낮추면 unknown↓, 올리면 unknown↑
 
 # ---------------------------------------------------------------- 학습 파라미터
 BATCH_SIZE = 32

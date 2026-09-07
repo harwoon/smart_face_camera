@@ -3,3 +3,7 @@ numpy>=1.24.0
 torch>=2.0.0
 torchvision>=0.15.0
 Pillow>=9.5.0
+
+# ArcFace 실험 (config.USE_ARCFACE=True일 때만 필요, 지울 땐 이 두 줄만 빼면 됨)
+insightface>=0.7.3
+onnxruntime>=1.16.0

@@ -74,8 +74,12 @@ class SmartCamera:
     def enter_recognize(self):
         if self.recognizer is None:
             print("[인식] 모델 로딩 중...")
-            from recognizer import Recognizer     # 여기서 지연 import
-            self.recognizer = Recognizer()
+            if config.USE_ARCFACE:
+                from arcface_recognizer import ArcFaceRecognizer
+                self.recognizer = ArcFaceRecognizer()
+            else:
+                from recognizer import Recognizer     # 여기서 지연 import
+                self.recognizer = Recognizer()
 
         if self.recognizer.ready or self.recognizer.load():
             self.mode = MODE_RECOGNIZE
