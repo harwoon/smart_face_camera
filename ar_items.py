@@ -110,10 +110,10 @@ def item_extra(frame, face):
     x, y, w, h = face
     item = load_item("cathat.png")
 
-    item_w = int(w * 3) 
-    item_h = int(item_w * 1.2) 
-    item_x = (x + (w - item_w * 0.45)) // 2 
-    item_y = y + int(h * -1.3) 
+    item_w = int(w * 3)
+    item_h = int(item_w * 1.2)
+    item_x = x + int((w - item_w * 0.72) // 2)
+    item_y = y + int(h * -1.3)
 
     return overlay(frame, item, item_x, item_y, item_w, item_h)
 
@@ -121,10 +121,10 @@ def item_waddle_Dee(frame, face):
     x, y, w, h = face
     item = load_item("Waddle_Dee.png")
 
-    item_w = int(w * 2.2) 
-    item_h = int(item_w * 1.4) 
-    item_x = (x + (w - item_w * 0.35)) // 2 
-    item_y = y + int(h * -1.8) 
+    item_w = int(w * 2.2)
+    item_h = int(item_w * 1.4)
+    item_x = x + int((w - item_w * 0.76) // 2)
+    item_y = y + int(h * -1.8)
 
     return overlay(frame, item, item_x, item_y, item_w, item_h)
 
