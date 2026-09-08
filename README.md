@@ -52,26 +52,3 @@ ar_items.apply_ar(frame, id, faces) -> frame
 collector.update(raw_frame, faces)  -> bool    # 완료 여부
 recognizer.update(raw_frame, faces) -> (label, conf) | None
 ```
-
-새 필터나 아이템을 추가할 때는 함수를 만들고
-`FILTERS` / `AR_ITEMS` 딕셔너리에 한 줄만 등록하면 된다.
-`main.py`는 건드릴 일이 없다. (git 충돌 방지)
-
-## 작업 순서
-
-1. **Phase 1** 뼈대 확인 — 웹캠이 뜨고 얼굴에 사각형이 그려지는지
-2. **Phase 2** `filters.py`의 TODO 채우기
-3. **Phase 3** `assets/`에 PNG 넣고 `ar_items.py`의 TODO 채우기
-4. **Phase 4** 팀원 전원 모여서 데이터 수집 (`r` 키)
-5. **Phase 5** `python train.py`
-6. **Phase 6** `f` 키로 인식 테스트
-
-
-## 데이터 수집 체크리스트
-
-- [ ] 1인당 150~300장
-- [ ] 고개 좌우/상하, 표정 변화, 거리 변화 포함
-- [ ] 조명 조건 2가지 이상
-- [ ] 배경 2곳 이상 (한 곳에서만 찍으면 배경을 외운다)
-- [ ] 인원별 개수 균형
-- [ ] 최종 검증용으로 **다른 날/다른 장소** 사진 따로 확보
